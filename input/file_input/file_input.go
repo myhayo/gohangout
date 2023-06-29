@@ -2,6 +2,7 @@ package file_input
 
 import (
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -111,7 +112,7 @@ func (fi *FileInput) StartNewReader(filePath string) *Reader {
 				break
 			}
 
-			fi.channel <- line
+			fi.channel <- strings.TrimRight(line, "\n")
 
 			// 记录最新行数
 			fileOffsetsItem.Lines = reader.Lines()
