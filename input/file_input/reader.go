@@ -17,33 +17,33 @@ type Reader struct {
 	Channel chan string
 }
 
-// 停止
+// Stop 停止
 func (r *Reader) Stop() {
 	r.stopped = true
 }
 
-// 暂停
+// Pause 暂停
 func (r *Reader) Pause() {
 	r.paused = true
 }
 
-// 继续
+// Continue 继续
 func (r *Reader) Continue() {
 	r.paused = false
 	r.pause <- true
 }
 
-// 当前行数
+// Lines 当前行数
 func (r *Reader) Lines() int {
 	return r.lines
 }
 
-// 偏移量
+// Offsets 偏移量
 func (r *Reader) Offsets() int {
 	return r.offsets
 }
 
-// 开始监听
+// Watch 开始监听
 func (r *Reader) Watch() error {
 	f, err := os.Open(r.path)
 
@@ -51,7 +51,7 @@ func (r *Reader) Watch() error {
 		return err
 	}
 
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	buf := bufio.NewReader(f)
 	_, _ = buf.Discard(r.offsets)
@@ -87,7 +87,7 @@ func (r *Reader) Watch() error {
 	return nil
 }
 
-// 创建新的Reader
+// NewReader 创建新的Reader
 func NewReader(path string, offsets int, lines int) *Reader {
 	r := &Reader{
 		path:    path,
