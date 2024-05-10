@@ -273,6 +273,28 @@ Stdin:
 - plain 将整条数据写到 message 字段, 并添加当前时间到 `@timestamp` 字段.
 - json:not_usenumber 因为数字类型的位数有限, 会有一个最高精度, 为了不损失精度, 默认的 json 配置情况下, 数字类型的值默认转成字符串保存. 如果需要存成数字, 比如后续是要写 clickhouse, 可以使用 json:not_usenumber.  如果使用 json codec, 也可以配置 Convert Filter 转换成数字.
 
+### File
+
+```
+File:
+  # 是否为gzip格式
+  gzip: true
+  # 路径列表, 支持通配符
+  paths:
+    - "build/logs/*.log.gz"
+  # 存档文件路径, 记录文件读取进度, 多个配置请分别指定不同文件
+  local_storage_file: "build/logs/data.json"
+```
+
+从指定路径读取文件数据, 并监控文件增删, 未开启gzip格式则支持持续从文件中读取新增行, gzip格式则仅完整读一次
+
+#### codec
+目前有json/plain/json:not_usenumber三种.
+
+- json 对数据做 json 解析, 如果解析失败, 则将整条数据写到 message 字段, 并添加当前时间到 `@timestamp` 字段. 如果解析成功而且数据中没有 `@timestamp` 字段, 则添加当前时间到 `@timestamp` 字段.
+- plain 将整条数据写到 message 字段, 并添加当前时间到 `@timestamp` 字段.
+- json:not_usenumber 因为数字类型的位数有限, 会有一个最高精度, 为了不损失精度, 默认的 json 配置情况下, 数字类型的值默认转成字符串保存. 如果需要存成数字, 比如后续是要写 clickhouse, 可以使用 json:not_usenumber.  如果使用 json codec, 也可以配置 Convert Filter 转换成数字.
+
 ### TCP
 
 ```

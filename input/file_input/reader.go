@@ -2,12 +2,14 @@ package file_input
 
 import (
 	"bufio"
+	"compress/gzip"
 	"io"
 	"os"
 	"time"
 )
 
 type Reader struct {
+	gzip    bool
 	path    string
 	stopped bool
 	paused  bool
@@ -33,6 +35,11 @@ func (r *Reader) Continue() {
 	r.pause <- true
 }
 
+// Gzip 是否Gzip
+func (r *Reader) Gzip() bool {
+	return r.gzip
+}
+
 // Lines 当前行数
 func (r *Reader) Lines() int {
 	return r.lines
@@ -53,7 +60,23 @@ func (r *Reader) Watch() error {
 
 	defer func() { _ = f.Close() }()
 
-	buf := bufio.NewReader(f)
+	var ioReader io.Reader
+
+	if r.gzip {
+		gzipReader, err := gzip.NewReader(f)
+
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = gzipReader.Close() }()
+
+		ioReader = gzipReader
+	} else {
+		ioReader = f
+	}
+
+	buf := bufio.NewReader(ioReader)
 	_, _ = buf.Discard(r.offsets)
 	var line []byte
 	for {
@@ -88,8 +111,9 @@ func (r *Reader) Watch() error {
 }
 
 // NewReader 创建新的Reader
-func NewReader(path string, offsets int, lines int) *Reader {
+func NewReader(isGzip bool, path string, offsets int, lines int) *Reader {
 	r := &Reader{
+		gzip:    isGzip,
 		path:    path,
 		offsets: offsets,
 		lines:   lines,

@@ -10,6 +10,7 @@ import (
 )
 
 type FileInput struct {
+	gzip             bool
 	paths            []string
 	localStorageFile string
 	localStorage     *LocalStorage
@@ -85,9 +86,9 @@ func (fi *FileInput) StartReaders() {
 
 // StartNewReader 启动新Reader
 func (fi *FileInput) StartNewReader(filePath string) *Reader {
-	fileOffsetsItem := fi.getFileOffsetsItem(filePath)
+	foi := fi.getFileOffsetsItem(filePath)
 
-	reader := NewReader(filePath, fileOffsetsItem.Offsets, fileOffsetsItem.Lines)
+	reader := NewReader(fi.gzip, filePath, foi.Offsets, foi.Lines)
 
 	// 启动Watch线程
 	go func() {
@@ -115,9 +116,9 @@ func (fi *FileInput) StartNewReader(filePath string) *Reader {
 			fi.channel <- strings.TrimRight(line, "\n")
 
 			// 记录最新行数
-			fileOffsetsItem.Lines = reader.Lines()
-			fileOffsetsItem.Offsets = reader.Offsets()
-			fi.setFileOffsetsItem(filePath, fileOffsetsItem)
+			foi.Lines = reader.Lines()
+			foi.Offsets = reader.Offsets()
+			fi.setFileOffsetsItem(filePath, foi)
 		}
 	}()
 
@@ -126,6 +127,7 @@ func (fi *FileInput) StartNewReader(filePath string) *Reader {
 
 func NewFileInput(config map[interface{}]interface{}) topology.Input {
 	input := &FileInput{
+		gzip:             config["gzip"].(bool),
 		paths:            make([]string, 0),
 		localStorageFile: config["local_storage_file"].(string),
 		channel:          make(chan string),
